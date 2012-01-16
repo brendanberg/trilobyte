@@ -1,0 +1,161 @@
+# An opaque Data class with Base encoding and decoding functionality
+# -----------------------------------------------------------------------------
+# A collection of classes for storing binary data and converting it into
+# various base-encoded strings for text representations useful for
+# over-the-wire transmission.
+# 
+# Includes implementations of Base16, Doug Crockford's Base32, Flickr's
+# Base58, and Base64 (soon) encodings.
+# 
+# Documentation at http://github.com/brendn/Trilobyte
+# 
+# Version 0.3
+# 
+# Written by Brendan Berg
+# Copyright Plus or Minus Five, 2012
+
+from math import log
+
+
+class Data(object):
+	def __init__(self, string, encoding=None):
+		if encoding:
+			self.bytes = encoding.decode(string)
+		else:
+			self.bytes = string
+	
+	def stringWithEncoding(self, encoding, **kwargs):
+		return encoding.encode(self.bytes, **kwargs)
+	
+	def __add__(self, other):
+		return Data(self.bytes + other.bytes)
+
+
+class Encoding(object):
+	alphabet = ''
+	base = 0
+	replacements = {}
+	
+	def __init__(self):
+		raise NotImplementedError(
+			'Encoding classes cannot be instantiated. Use '
+			'Data.stringWithEncoding(Encoding) instead.'
+		)
+	
+	@classmethod
+	def decode(clz, string):
+		width = int(log(clz.base, 2))
+		bytes = ''
+		window = 0
+		windowOffset = 0
+		
+		for char in clz._canonicalRepr(string)[::-1]:
+			window += clz.alphabet.index(char) << windowOffset
+			windowOffset += width
+			
+			if windowOffset >= 8:
+				bytes += chr(window & 0xFF)
+				window >>= 8
+				windowOffset -= 8
+		
+		if window and windowOffset > 0:
+			bytes += chr(window & 0xFF)
+		
+		# We assembled the byte string in reverse because it's faster
+		# to append to a string than to prepend in Python. Reversing a
+		# string, on the other hand is Super Fast (TM).
+		return bytes[::-1]
+	
+	@classmethod
+	def encode(clz, byteString):
+		width = int(log(clz.base, 2))
+		string = ''
+		window = 0
+		windowOffset = 0
+		charOffset = 0
+		
+		for char in byteString[::-1]:
+			window += ord(char) << windowOffset
+			windowOffset += 8
+			
+			while windowOffset >= width:
+				string += clz.alphabet[window & (2 ** width - 1)]
+				window >>= width
+				windowOffset -= width
+		
+		if window and windowOffset > 0:
+			string += clz.alphabet[window & (2 ** width - 1)]
+		
+		return string[::-1]
+	
+	@classmethod
+	def _canonicalRepr(clz, string):
+		string = string.upper()
+		
+		for k, v in clz.replacements.iteritems():
+			string = string.replace(k, v)
+		
+		return string
+
+
+class Base16(Encoding):
+	"Encoder class for your friendly neighborhood hexidecimal numbers."
+	
+	alphabet = '0123456789ABCDEF'
+	base = 16
+	replacements = {
+		'-': '',
+		' ': '',
+		'I': '1',
+		'L': '1',
+		'O': '0',
+	}
+
+
+
+class Base32(Encoding):
+	'''Encoder class for Doug Crockford's Base32 encoding. This is not merely
+	Python's `int(encoded, 32)` since Crockford's spec discusses replacements
+	for commonly confused characters, rather than a simple extension of the
+	alphabet used in hexadecimal. For example, the capital letter I, lower
+	case i, and lower case l could all be mistaken for the numeral 1. This
+	encoding removes that ambiguity by accepting any of these characters but
+	converting to a canonical representation for decoding.
+
+	http://www.crockford.com/wrmg/base32.html
+	'''
+	
+	alphabet = '0123456789ABCDEFGHJKMNPQRSTVWXYZ'
+	base = 32
+	replacements = {
+		'-': '',
+		' ': '',
+		'I': '1',
+		'L': '1',
+		'O': '0',
+	}
+
+
+
+# The general algorithm defined in the Encoding base class expects encoding
+# characters to have integer widths. Base 58 encoding is approximately 5.857
+# bits wide. I know, right? Numbers are weird.
+
+# class Base58(Encoding):
+# 	'''Encoder class for Flickr's base 58 encoding. Base 58 encoding is similar
+# 	to base 32, but includes upper and lower case letters. Upper case I, lower
+# 	case l, and upper case O are all excluded from the alphabet. Like
+# 	Crockford's base 32, base 58 encoding is accepting of ambiguous input.
+# 	
+# 	http://www.flickr.com/groups/api/discuss/72157616713786392
+# 	'''
+# 	
+# 	alphabet = '123456789abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ'
+# 	base = 58
+# 	replacements = {
+# 		'-': '',
+# 		' ': '',
+# 		'I': '1',
+# 		'l': '1',
+# 		'O': '0'
+# 	}
