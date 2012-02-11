@@ -5,7 +5,7 @@
 # over-the-wire transmission.
 # 
 # Includes implementations of Base16, Doug Crockford's Base32, Flickr's
-# Base58, and Base64 (soon) encodings.
+# Base58, and Base64 encodings.
 # 
 # Documentation at http://github.com/brendn/Trilobyte
 # 
