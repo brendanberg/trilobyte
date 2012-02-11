@@ -36,7 +36,7 @@ a Data object.
 
 	>>> uid = Data('\x97\x88\xf7V\xd4\x9aHE\x84=\xba\xec\xef\x08\xb88')
 	>>> uid.stringWithEncoding(Base32)
-	'1RQ04EZV5T7P24AJ4TTHBFF24Q'
+	'JY4FENPMK944B11XQBPEY25R70'
 
 By default, calling `str()` on a Data object will result in a base 64 encoded
 string representation of the internal byte string.
@@ -92,11 +92,11 @@ associated values. The Base32 replacements dictionary is shown below:
 		'O': '0'
 	}
 
-When we canonicalize an input string like `LMPO5-QRKXY-DIGCT`, we effectively
+When we canonicalize an input string like `LMPO5-QRKXY-DIGCR`, we effectively
 remove hyphens and spaces, and we replace any 'I' or 'L' with the numeral '1',
 and any 'O' with the numeral '0'.
 
 Encoding and decoding the canonical string is now handled by the `Encoding`
-base implementation of `encode()` and `decode()`.
+base class's implementation of `encode()` and `decode()`.
 
 [spec]: (http://www.crockford.com/wrmg/base32.html)
