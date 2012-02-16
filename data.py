@@ -9,7 +9,7 @@
 # 
 # Documentation at http://github.com/brendn/Trilobyte
 # 
-# Version 0.3
+# Version 0.4
 # 
 # Written by Brendan Berg
 # Copyright Plus or Minus Five, 2012
