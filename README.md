@@ -1,4 +1,5 @@
-# Trilobyte
+Trilobyte
+=========
 
 Trilobyte is a collection of classes for storing binary data and converting it
 into various base-encoded strings for text representations useful for over-the-
@@ -11,40 +12,83 @@ addition, the `Encoding` class provides an abstract interface for various
 encoding implementations. Trilobyte provides classes that implement base 16,
 Doug Crockford's base 32, Flickr's base 58, and base 64 encodings.
 
-This document describes the motivation and implementation of the Trilobyte
-library.
+This document describes the motivation behind the Trilobyte library and high-
+level use of the objects the library provides.
 
-## Data Programming Guide
 
-Data objects are opaque wrappers for a string of bytes. Its constructor takes
-an encoded string and an encoding specifier. (Encoding specifiers are
-discussed later.)
+Data Programming Guide
+----------------------
 
-	>>> d = Data('ba58b7c4fbe6c19a', Base16)
+Data objects are opaque wrappers for a string of bytes. The constructor takes
+either an encoded string and an encoding specifier, or a raw byte string.
+(Encoding specifiers are discussed later.)
+
+
+### Creating Data Objects from Raw Bytes
+
+Calling the Data constructor with a raw byte string simply wraps the byte
+string with a Data object.
+
+	>>> Data('\xcd\tl\xb2y\xd9Ei\xa3\x02\x13\x02\xf44E\xa3')
+	Data('zQlssnnZRWmjAhMC9DRFow==', Base64)
+
+Note that the default representation of a Data object uses the base 64 string
+representation of its contents. This is typically more compact than Python's
+representation of byte strings, since the overhead of hex escaping non-ASCII
+characters in the byte string is avoided.
+
+This form of the constructor is useful when dealing with Python libraries that
+represent raw binary data as native strings of bytes. For example, an MD5
+digest may be encoded as a Base64 string without going through hexadecimal as
+an intermediate step.
+
+	>>> from hashlib import md5
+	>>> Data(md5('Hello, world!').digest())
+	Data('bNNVbesNpUvKBgtMOUeYOQ==', Base64)
+
+
+### Creating Data Objects from Encoded Strings
+
+When you're provided with data in specific string encodings, the second form
+of the constructor is used. Here, you see a Data object instantiated by
+calling the constructor with arguments for the encoded string and an encoding
+class.
+
+	>>> Data('5d41402abc4b2a76b9719d911017c592', Base16)
+	Data('XUFAKrxLKna5cZ2REBfFkg==', Base64)
+
+### Getting String Representations of Data
 
 Data objects have a `stringWithEncoding` method that takes an encoding object
 that determines the output encoding. The code snippet below shows how to create
 a Base58 encoded string from Data instance `d` above. 
 
-	>>> d.stringWithEncoding(Base58)
+	>>> dat = Data('ba58b7c4fbe6c19a', Base16)
+	>>> dat.stringWithEncoding(Base58)
 	'xaN7oqjfR4Y'
 
-By omitting the encoding object in the `Data()` constructor, you can create a
-Data object with a raw byte string you may already have. (For example, the
-expression `uuid4().bytes` results in a raw byte string that can be wrapped in
-a Data object.
+Likewise, a raw string of bytes may be converted to Doug Crockford's Base32.
 
 	>>> uid = Data('\x97\x88\xf7V\xd4\x9aHE\x84=\xba\xec\xef\x08\xb88')
 	>>> uid.stringWithEncoding(Base32)
 	'JY4FENPMK944B11XQBPEY25R70'
 
-By default, calling `str()` on a Data object will result in a base 64 encoded
-string representation of the internal byte string.
 
-	>>> str(uid)
-	'l4j3VtSaSEWEPbrs7wi4OA=='
+### Accessing and Comparing Bytes
 
-## The Data Class
+More info coming soon.
+
+
+### Manipulating Data Objects
+
+You can append data objects with the Python `+` operator:
+
+	>>> Data('5ee8da1274a740e1', Base16) + Data('aa347f87669901aa', Base16)
+	Data('XujaEnSnQOGqNH+HZpkBqg==', Base64)
+
+
+The Data Class
+--------------
 
 The `Data` class is a thin wrapper around byte strings. As we saw previously,
 the constructor has two forms. With one argument, it treats the `string`
@@ -55,7 +99,15 @@ Instances of `Data` objects provide a `stringWithEncoding()` method which also
 takes an `encoding` argument. It returns the base-encoded representation of the
 byte string using the specified encoding.
 
-## The Encoding Class
+By default, calling `str()` on a Data object will result in a base 64 encoded
+string representation of the internal byte string.
+
+	>>> str(uid)
+	'l4j3VtSaSEWEPbrs7wi4OA=='
+
+
+The Encoding Class
+------------------
 
 Subclasses of `Encoding` must declare their alphabet and base, and may
 optionally declare a dictionary of replacements. Encodings define two class
@@ -67,7 +119,8 @@ Additionally, a private `_canonicalRepr()` class method allows the encoding
 classes to be forgiving of some non-standard input. (Some base-encoded strings
 are not case-sensitive, and may accept either upper- or lowercase inputs.)
 
-### A brief tour of Base32
+
+### An Introduction to Base32
 
 Looking briefly at the `Base32` encoding subclass, it defines class's `base`
 property as 32, and provides the following alphabet:
@@ -92,11 +145,29 @@ associated values. The Base32 replacements dictionary is shown below:
 		'O': '0'
 	}
 
-When we canonicalize an input string like `LMPO5-QRKXY-DIGCR`, we effectively
-remove hyphens and spaces, and we replace any 'I' or 'L' with the numeral '1',
-and any 'O' with the numeral '0'.
+When we canonicalize an input string like `LMPO5-QRKXY-DIGCR`, we simply
+remove hyphens and spaces, and replace any occurrences of the letters 'I' or
+'L' with the numeral '1', and any occurrences of the letter 'O' with the
+numeral '0'.
 
 Encoding and decoding the canonical string is now handled by the `Encoding`
 base class's implementation of `encode()` and `decode()`.
 
 [spec]: (http://www.crockford.com/wrmg/base32.html)
+
+
+## Using Base32 Encodings
+
+As we saw above, the beauty of Base32 is that it's error-resistant. The
+following example demonstrates this property.
+
+	>>> normal = Data('110G', Base32)
+	>>> silly = Data('ILOG', Base32)
+	
+	>>> normal == silly
+	True
+
+Note that the string we use to create the `silly` Data object uses the letters
+'I', 'L', and 'O', which are not part of the Base32 alphabet. When the decode
+method canonicalizes the input string, they are converted to the correct
+characters before decoding.

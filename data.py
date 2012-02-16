@@ -9,7 +9,7 @@
 # 
 # Documentation at http://github.com/brendn/Trilobyte
 # 
-# Version 0.4
+# Version 0.5
 # 
 # Written by Brendan Berg
 # Copyright Plus or Minus Five, 2012
@@ -19,6 +19,12 @@ from math import log
 
 
 class Data(object):
+	'''The `Data` class is an opaque data object that uses a byte string as a
+	backing store. The class provides functions to manipulate data objects and
+	generate string representations
+	
+	'''
+	
 	def __init__(self, string, encoding=None):
 		if encoding:
 			self.bytes = encoding.decode(string)
@@ -28,11 +34,36 @@ class Data(object):
 	def stringWithEncoding(self, encoding, **kwargs):
 		return encoding.encode(self.bytes, **kwargs)
 	
+	def __str__(self):
+		return self.stringWithEncoding(Base64)
+	
+	def __repr__(self):
+		return "Data('{0}', Base64)".format(
+			self.stringWithEncoding(Base64)
+		)
+	
 	def __add__(self, other):
 		return Data(self.bytes + other.bytes)
+	
+	def __eq__(self, other):
+		return self.bytes == other.bytes
 
 
 class Encoding(object):
+	'''The `Encoding` class is an abstract base for various encoding types.
+	It provides generic left-to-right bitwise conversion algorithms for its
+	subclasses. At a minimum, a subclass must override the `alphabet` and
+	`base` class properties.
+	
+	Attempting to instantiate an encoding object will result in a
+	`NotImplementedError`:
+	
+	>>> Encoding()
+	Traceback (most recent call last):
+		...
+	NotImplementedError: Encoding classes cannot be instantiated. Use Data.stringWithEncoding(Encoding) instead.
+	'''
+	
 	alphabet = ''
 	base = 0
 	replacements = {}
@@ -124,8 +155,6 @@ class Encoding(object):
 	
 	@classmethod
 	def _canonicalRepr(clz, string):
-		string = string.upper()
-		
 		for k, v in clz.replacements.iteritems():
 			string = string.replace(k, v)
 		
@@ -149,6 +178,10 @@ class Base16(Encoding):
 		'O': '0',
 		'S': '5',
 	}
+	
+	@classmethod
+	def _canonicalRepr(clz, string):
+		return super(Base16, clz)._canonicalRepr(string.upper())
 
 
 
@@ -175,6 +208,10 @@ class Base32(Encoding):
 		'L': '1',
 		'O': '0'
 	}
+	
+	@classmethod
+	def _canonicalRepr(clz, string):
+		return super(Base32, clz)._canonicalRepr(string.upper())
 
 
 
@@ -189,6 +226,7 @@ class Base64(Encoding):
 	replacements = {
 		'\r': '',
 		'\n': '',
+		' ': '',
 		'=': ''
 	}
 	
@@ -201,13 +239,6 @@ class Base64(Encoding):
 		string = super(Base64, clz).encode(byteString, **kwargs)
 		
 		string += '=' * (3 - (len(byteString) % 3))
-		
-		return string
-	
-	@classmethod
-	def _canonicalRepr(clz, string):
-		for k, v in clz.replacements.iteritems():
-			string = string.replace(k, v)
 		
 		return string
 
@@ -268,11 +299,6 @@ class Base58(Encoding):
 		string = ''
 		temp = 0
 		
-		# Because each digit is not a whole number of bits, we are using
-		# binary as an intermediary. There should be a better way to do
-		# this, but this is the best I can find:
-		# http://forums.xkcd.com/viewtopic.php?f=12&t=69664
-		
 		for idx, char in enumerate(byteString[::-1]):
 			temp += ord(char) * (256 ** idx)
 		
@@ -281,10 +307,11 @@ class Base58(Encoding):
 			temp //= 58
 		
 		return string[::-1]
+
+
+
+if __name__ == '__main__':
+	import doctest
 	
-	@classmethod
-	def _canonicalRepr(clz, string):
-		for k, v in clz.replacements.iteritems():
-			string = string.replace(k, v)
-		
-		return string
+	doctest.testmod()
+	doctest.testfile('README.md', optionflags=doctest.ELLIPSIS, globs=globals())
