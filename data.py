@@ -14,6 +14,7 @@
 # Written by Brendan Berg
 # Copyright Plus or Minus Five, 2012
 
+from __future__ import division
 from math import log
 
 
@@ -242,20 +243,19 @@ class Base58(Encoding):
 	def decode(clz, string):
 		width = int(log(clz.base, 2))
 		bytes = ''
-		window = 0
-		windowOffset = 0
+		temp = 0
 		
-		for char in clz._canonicalRepr(string)[::-1]:
-			window += clz.alphabet.index(char) << windowOffset
-			windowOffset += width
-			
-			if windowOffset >= 8:
-				bytes += chr(window & 0xFF)
-				window >>= 8
-				windowOffset -= 8
+		# Because each digit is not a whole number of bits, we are using
+		# binary as an intermediary. There should be a better way to do
+		# this, but this is the best I can find:
+		# http://forums.xkcd.com/viewtopic.php?f=12&t=69664
 		
-		if window and windowOffset > 0:
-			bytes += chr(window & 0xFF)
+		for idx, char in enumerate(clz._canonicalRepr(string)[::-1]):
+			temp += clz.alphabet.index(char) * (58 ** idx)
+		
+		while temp > 0:
+			bytes += chr(temp % 256)
+			temp //= 256
 		
 		# We assembled the byte string in reverse because it's faster
 		# to append to a string than to prepend in Python. Reversing a
@@ -266,21 +266,25 @@ class Base58(Encoding):
 	def encode(clz, byteString):
 		width = int(log(clz.base, 2))
 		string = ''
-		window = 0
-		windowOffset = 0
-		charOffset = 0
+		temp = 0
 		
-		for char in byteString[::-1]:
-			window += ord(char) << windowOffset
-			windowOffset += 8
-			
-			while windowOffset >= width:
-				string += clz.alphabet[window & (2 ** width - 1)]
-				window >>= width
-				windowOffset -= width
+		# Because each digit is not a whole number of bits, we are using
+		# binary as an intermediary. There should be a better way to do
+		# this, but this is the best I can find:
+		# http://forums.xkcd.com/viewtopic.php?f=12&t=69664
 		
-		if window and windowOffset > 0:
-			string += clz.alphabet[window & (2 ** width - 1)]
+		for idx, char in enumerate(byteString[::-1]):
+			temp += ord(char) * (256 ** idx)
+		
+		while temp > 0:
+			string += clz.alphabet[temp % 58]
+			temp //= 58
 		
 		return string[::-1]
-
+	
+	@classmethod
+	def _canonicalRepr(clz, string):
+		for k, v in clz.replacements.iteritems():
+			string = string.replace(k, v)
+		
+		return string
