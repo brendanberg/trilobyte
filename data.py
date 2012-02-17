@@ -29,6 +29,7 @@ class Data(object):
 		if encoding:
 			self.bytes = encoding.decode(string)
 		else:
+			assert(isinstance(string, str))
 			self.bytes = string
 	
 	def stringWithEncoding(self, encoding, **kwargs):
@@ -61,7 +62,7 @@ class Encoding(object):
 	>>> Encoding()
 	Traceback (most recent call last):
 		...
-	NotImplementedError: Encoding classes cannot be instantiated. Use Data.stringWithEncoding(Encoding) instead.
+	NotImplementedError: Encoding classes cannot be instantiated. ...
 	'''
 	
 	alphabet = ''
@@ -237,10 +238,7 @@ class Base64(Encoding):
 			kwargs['alphabet'] = clz.alphabet[:-2] + highIndexChars
 		
 		string = super(Base64, clz).encode(byteString, **kwargs)
-		
-		string += '=' * (3 - (len(byteString) % 3))
-		
-		return string
+		return string + '=' * (3 - (len(byteString) % 3))
 
 
 
@@ -313,5 +311,6 @@ class Base58(Encoding):
 if __name__ == '__main__':
 	import doctest
 	
-	doctest.testmod()
+	doctest.testmod(optionflags=doctest.ELLIPSIS)
 	doctest.testfile('README.md', optionflags=doctest.ELLIPSIS, globs=globals())
+	doctest.testfile('documentation/custom_encoding.md', optionflags=doctest.ELLIPSIS, globs=globals())

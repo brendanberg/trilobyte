@@ -148,7 +148,8 @@ associated values. The Base32 replacements dictionary is shown below:
 When we canonicalize an input string like `LMPO5-QRKXY-DIGCR`, we simply
 remove hyphens and spaces, and replace any occurrences of the letters 'I' or
 'L' with the numeral '1', and any occurrences of the letter 'O' with the
-numeral '0'.
+numeral '0'. The canonicalized representation of the previous input would
+therefore be `1MP05QRKXYD1GCR`.
 
 Encoding and decoding the canonical string is now handled by the `Encoding`
 base class's implementation of `encode()` and `decode()`.
@@ -156,7 +157,7 @@ base class's implementation of `encode()` and `decode()`.
 [spec]: (http://www.crockford.com/wrmg/base32.html)
 
 
-## Using Base32 Encodings
+### Using Base32 Encodings
 
 As we saw above, the beauty of Base32 is that it's error-resistant. The
 following example demonstrates this property.
@@ -171,3 +172,10 @@ Note that the string we use to create the `silly` Data object uses the letters
 'I', 'L', and 'O', which are not part of the Base32 alphabet. When the decode
 method canonicalizes the input string, they are converted to the correct
 characters before decoding.
+
+
+### Creating Custom Encodings
+
+A detailed tutorial on creating custom data encodings can be found [here][encoding].
+
+[encoding]: (https://github.com/brendn/Trilobyte/documentation/custom_encoding.md)
