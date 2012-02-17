@@ -178,4 +178,4 @@ characters before decoding.
 
 A detailed tutorial on creating custom data encodings can be found [here][encoding].
 
-[encoding]: (https://github.com/brendn/Trilobyte/documentation/custom_encoding.md)
+[encoding]: (https://github.com/brendn/Trilobyte/blob/master/documentation/custom_encoding.md)
