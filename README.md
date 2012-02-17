@@ -128,7 +128,7 @@ property as 32, and provides the following alphabet:
 	'0123456789ABCDEFGHJKMNPQRSTVWXYZ'
 
 Note that the letters 'I', 'L', and 'O' are missing from the Base32 alphabet.
-As Doug Crockford describes in his [Base32 specification][spec] these
+As Doug Crockford describes in his [Base32 specification](http://www.crockford.com/wrmg/base32.html) these
 characters are often confused with the numerals '0' and '1'. (Base32 strings
 also ignore hyphens and spaces.)
 
@@ -154,7 +154,6 @@ therefore be `1MP05QRKXYD1GCR`.
 Encoding and decoding the canonical string is now handled by the `Encoding`
 base class's implementation of `encode()` and `decode()`.
 
-[spec]: (http://www.crockford.com/wrmg/base32.html)
 
 
 ### Using Base32 Encodings
@@ -176,6 +175,4 @@ characters before decoding.
 
 ### Creating Custom Encodings
 
-A detailed tutorial on creating custom data encodings can be found [here][encoding].
-
-[encoding]: (https://github.com/brendn/Trilobyte/blob/master/documentation/custom_encoding.md)
+A detailed tutorial on creating custom data encodings can be found [here](https://github.com/brendn/Trilobyte/blob/master/documentation/custom_encoding.md).
