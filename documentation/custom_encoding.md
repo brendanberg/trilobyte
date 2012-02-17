@@ -3,7 +3,7 @@ Custom String Encodings for Trilobyte's Data Objects
 
 This document describes the process of creating custom string encoding classes
 for Trilobyte `Data` objects. We will start by looking at a slightly modified
-implementation of Base32 encoding that conforms with [RFC 4648][rfc], followed
+implementation of Base32 encoding that conforms with [RFC 4648](http://tools.ietf.org/html/rfc4648), followed
 by a new base 54 encoding designed to be highly error-resistant.
 
 
@@ -41,7 +41,7 @@ Another simple subclass is
 
 ### RFC 4648 Base32 Encoding
 
-[RFC 4648][rfc] describes a version of Base32 encoding that is stricter than
+[RFC 4648](http://tools.ietf.org/html/rfc4648) describes a version of Base32 encoding that is stricter than
 Doug Crockford's version. Still, it may be helpful to have an Encoding class
 that's able to handle this variant. The `Base32_4648` class defined below is a
 simple implementation of this standard.
@@ -89,5 +89,3 @@ need to make to an encoding is to modify its alphabet. However, some encodings
 do more than just re-partition bits and look up values. In the next section,
 we'll look at how to customize the `Encoding` subclass for a more complex
 encoding scheme.
-
-[rfc]: (http://tools.ietf.org/html/rfc4648)
