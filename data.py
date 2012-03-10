@@ -39,15 +39,48 @@ class Data(object):
 		return self.stringWithEncoding(Base64)
 	
 	def __repr__(self):
-		return "Data('{0}', Base64)".format(
-			self.stringWithEncoding(Base64)
-		)
+		encoded = self.stringWithEncoding(Base64)
+		if '\n' in encoded:
+			return "Data('''{0}''', Base64)".format(encoded)
+		else:
+			return "Data('{0}', Base64)".format(encoded)
+	
+	def __hex__(self):
+		return self.stringWithEncoding(Base16)
 	
 	def __add__(self, other):
 		return Data(self.bytes + other.bytes)
 	
+	__concat__ = __add__
+	
+	def __iadd__(self, other):
+		self.bytes += other.bytes
+		return self
+	
+	def __contains__(self, item):
+		return item.bytes in self.bytes
+	
 	def __eq__(self, other):
 		return self.bytes == other.bytes
+	
+	def __len__(self):
+		return len(self.bytes)
+	
+	def __getitem__(self, key):
+		return Data(self.bytes[key])
+	
+	def __setitem__(self, key, value):
+		if isinstance(key, slice):
+			start, stop, step = key.indices(len(self.bytes))
+			
+			if step != 1:
+				raise TypeError('cannot modify data contents with a stride')
+			
+			self.bytes = self.bytes[:start] + value.bytes + self.bytes[stop:]
+		elif isinstance(key, int):
+			self.bytes = self.bytes[:key] + value.bytes + self.bytes[key+1:]
+		else:
+			raise TypeError('data indices must be integers or slices')
 
 
 class Encoding(object):

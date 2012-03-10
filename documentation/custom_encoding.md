@@ -37,14 +37,16 @@ of two. The example below shows the `Binary` encoding in action.
 	>>> dec.bytes
 	'WORLD'
 
-Another simple subclass is 
+We've seen Doug Crockford's Base32 encoding in the general tutorial, but there
+are other specifications for encodings with slightly different alphabets and
+padding rules. We'll take a look at one of them in the next section.
 
 ### RFC 4648 Base32 Encoding
 
-[RFC 4648](http://tools.ietf.org/html/rfc4648) describes a version of Base32 encoding that is stricter than
-Doug Crockford's version. Still, it may be helpful to have an Encoding class
-that's able to handle this variant. The `Base32_4648` class defined below is a
-simple implementation of this standard.
+[RFC 4648](http://tools.ietf.org/html/rfc4648) describes a version of Base32
+encoding that is stricter than Doug Crockford's version. Still, it may be
+helpful to have an Encoding class that's able to handle this variant. The
+`Base32_4648` class defined below is a simple implementation of this standard.
 
 	>>> class Base32_4648(Encoding):
 	...     alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567'
@@ -89,3 +91,16 @@ need to make to an encoding is to modify its alphabet. However, some encodings
 do more than just re-partition bits and look up values. In the next section,
 we'll look at how to customize the `Encoding` subclass for a more complex
 encoding scheme.
+
+
+Implementing Advanced Encodings
+-------------------------------
+
+Sometimes overriding the `alphabet` and `base` attributes is not enough. In
+the previous section, we've seen how to implement simple extensions of the
+`encode` and `decode` methods. In this section we'll look at more complex
+encodings.
+
+Let's consider an encoding that includes parity data to reconstruct a
+partially damaged message payload. In this example we will be implementing
+[...] with a [...] algorithm.
