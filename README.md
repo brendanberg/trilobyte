@@ -61,7 +61,7 @@ class.
 
 Data objects have a `stringWithEncoding` method that takes an encoding object
 that determines the output encoding. The code snippet below shows how to create
-a Base58 encoded string from Data instance `d` above. 
+a Base58 encoded string from a Data instance we call `dat`. 
 
 	>>> dat = Data('ba58b7c4fbe6c19a', Base16)
 	>>> dat.stringWithEncoding(Base58)
