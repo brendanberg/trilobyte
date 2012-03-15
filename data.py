@@ -9,7 +9,7 @@
 # 
 # Documentation at http://github.com/brendn/Trilobyte
 # 
-# Version 0.5
+# Version 0.6
 # 
 # Written by Brendan Berg
 # Copyright Plus or Minus Five, 2012
@@ -120,7 +120,10 @@ class Encoding(object):
 		winOffset = 16 - width
 		
 		for ch in clz._canonicalRepr(string):
-			window |= (alphabet.index(ch) << winOffset)
+			try:
+				window |= (alphabet.index(ch) << winOffset)
+			except ValueError:
+				raise ValueError('Illegal character in input string')
 			winOffset -= width
 			
 			if winOffset <= (8 - width):
@@ -271,7 +274,8 @@ class Base64(Encoding):
 			kwargs['alphabet'] = clz.alphabet[:-2] + highIndexChars
 		
 		string = super(Base64, clz).encode(byteString, **kwargs)
-		return string + '=' * (3 - (len(byteString) % 3))
+		padding = '=' * (4 - ((len(string) % 4) or 4))
+		return string + padding
 
 
 
@@ -347,3 +351,4 @@ if __name__ == '__main__':
 	doctest.testmod(optionflags=doctest.ELLIPSIS)
 	doctest.testfile('README.md', optionflags=doctest.ELLIPSIS, globs=globals())
 	doctest.testfile('documentation/custom_encoding.md', optionflags=doctest.ELLIPSIS, globs=globals())
+	doctest.testfile('tests/tests.md', optionflags=doctest.ELLIPSIS, globs=globals())

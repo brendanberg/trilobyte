@@ -12,8 +12,8 @@ addition, the `Encoding` class provides an abstract interface for various
 encoding implementations. Trilobyte provides classes that implement base 16,
 Doug Crockford's base 32, Flickr's base 58, and base 64 encodings.
 
-This document describes the motivation behind the Trilobyte library and high-
-level use of the objects the library provides.
+This document describes the motivation behind the Trilobyte library and
+high-level use of the objects the library provides.
 
 
 Data Programming Guide
@@ -116,6 +116,12 @@ Keys may be integers or slices, but slices may not specify strides.
 	Traceback (most recent call last):
 		...
 	TypeError: cannot modify data contents with a stride
+
+
+License
+-------
+
+This library is provided under the [BSD License](https://github.com/brendn/Trilobyte/blob/master/LICENSE).
 
 
 More Information
