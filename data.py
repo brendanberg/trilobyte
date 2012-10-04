@@ -16,6 +16,7 @@
 
 from __future__ import division
 from math import log
+import re
 
 
 class Data(object):
@@ -198,6 +199,7 @@ class Encoding(object):
 		return string
 
 
+
 class Base16(Encoding):
 	"Encoder class for your friendly neighborhood hexidecimal numbers."
 	
@@ -345,10 +347,226 @@ class Base58(Encoding):
 
 
 
+class Phonetic(Encoding):
+	r'''
+	Encodes byte strings as sequences of phonetic words and decodes sequences
+	of words into byte strings.
+	
+	Each byte is encoded as one of 256 phonetically distinct words that are
+	easy for a human to speak or read. The word list is based on Zachary
+	Voase's humanhash word list, but some similar-sounding words have been
+	replaced with more distinct alternatives.
+	
+	
+	USAGE REFERENCE
+	
+	An empty Phonetic-encoded string decodes to an empty byte string.
+	
+	>>> a = Data('', Phonetic)
+	>>> hex(a)
+	''
+	
+	A zero value byte string encodes to a Phonetic-encoded string as many words
+	as the byte width of the original string.
+	
+	>>> b = Data('\x00\x00\x00\x00')
+	>>> b.stringWithEncoding(Phonetic)
+	'abacus abacus abacus abacus'
+	
+	Decoding a Phonetic-encoded string accepts canonical strings (lower case
+	words separated by spaces).
+	
+	>>> c = Data('chicken yankee wolfram asparagus', Phonetic)
+	>>> hex(c)
+	'26FCF90B'
+	
+	Decoding a Phonetic-encoded string accepts reasonable deviations from the
+	canonical string (mixed case, alternative whitespace, hyphens, periods,
+	and underscores.)
+	
+	>>> d = Data('table-tennis COFFEE.CUP Twenty_Three', Phonetic)
+	>>> hex(d)
+	'D8DC272EE3DF'
+	
+	Re-encoding the data results in the canonicalized word string.
+	
+	>>> d.stringWithEncoding(Phonetic)
+	'table tennis coffee cup twenty three'
+	
+	Words that are not in the word list are invalid.
+	
+	>>> Data('bandersnatch washington', Phonetic)
+	Traceback (most recent call last):
+	   ...
+	ValueError: Illegal input string
+	
+	>>> Data('sink-hippopotamus-tennessee', Phonetic)
+	Traceback (most recent call last):
+	   ...
+	ValueError: Illegal input string
+	
+	
+	SANITY TEST
+	
+	This is a doctest to verify that a byte string converted to a Phonetic-
+	encoded string will decode into the original byte string.
+	
+	>>> byteString = ''.join(chr(i) for i in range(256))
+	>>> e = Data(byteString)
+	>>> string = e.stringWithEncoding(Phonetic)
+	>>> f = Data(string, Phonetic)
+	>>> f.bytes == byteString
+	True
+	
+	'''
+	
+	wordList = [
+		'abacus', 'alabama', 'alarmist', 'alaska', 'alpha', 'angel', 'apart',
+		'april', 'arizona', 'arkansas', 'artist', 'asparagus', 'aspen', 'august',
+		'autumn', 'avocado', 'bacon', 'bakerloo', 'batman', 'beer', 'berlin',
+		'beryllium', 'black', 'blimp', 'blossom', 'bluebird', 'bravo', 'bulldog',
+		'burger', 'butter', 'california', 'carbon', 'cardinal', 'carolina',
+		'carpet', 'cat', 'ceiling', 'charlie', 'chicken', 'coffee', 'cola', 'cold',
+		'colorado', 'comet', 'connecticut', 'crazy', 'cup', 'dakota', 'december',
+		'delaware', 'delta', 'diet', 'don', 'double', 'early', 'earth', 'east',
+		'echo', 'edward', 'eight', 'eighteen', 'eleven', 'emma', 'enemy', 'equal',
+		'failed', 'fantail', 'fifteen', 'fillet', 'finland', 'fish', 'five', 'fix',
+		'floor', 'florida', 'football', 'four', 'fourteen', 'foxtrot', 'freddie',
+		'friend', 'fruit', 'gee', 'georgia', 'glucose', 'golf', 'green', 'great',
+		'hamper', 'happy', 'harry', 'hawaii', 'helium', 'high', 'hot', 'hotel',
+		'hydrogen', 'idaho', 'illinois', 'india', 'indigo', 'ink', 'iowa',
+		'island', 'item', 'jersey', 'jig', 'jogger', 'juliet', 'july', 'jupiter',
+		'kansas', 'kentucky', 'kilo', 'king', 'kitten', 'lactose', 'lake', 'lamp',
+		'lemon', 'leopard', 'lima', 'lion', 'lithium', 'london', 'louisiana',
+		'low', 'magazine', 'magnesium', 'maine', 'mango', 'march', 'mars',
+		'maryland', 'massachusetts', 'may', 'mexico', 'michigan', 'mike',
+		'minnesota', 'mirror', 'mississippi', 'missouri', 'mobile', 'mockingbird',
+		'monkey', 'montana', 'moon', 'mountain', 'multiply', 'music', 'nebraska',
+		'neptune', 'network', 'nevada', 'nine', 'nineteen', 'nitrogen', 'north',
+		'november', 'nuts', 'october', 'ohio', 'oklahoma', 'one', 'orange',
+		'oranges', 'oregon', 'oscar', 'oven', 'oxygen', 'paper', 'paris', 'pasta',
+		'pennsylvania', 'pip', 'pizza', 'pluto', 'potato', 'princess', 'purple',
+		'quebec', 'queen', 'quiet', 'red', 'river', 'robert', 'robin', 'romeo',
+		'rugby', 'sad', 'salami', 'saturn', 'september', 'seven', 'seventeen',
+		'shade', 'sierra', 'single', 'sink', 'six', 'sixteen', 'skylark', 'snake',
+		'social', 'sodium', 'solar', 'south', 'spaghetti', 'speaker', 'spring',
+		'stairway', 'steak', 'stream', 'summer', 'sweet', 'table', 'tango', 'ten',
+		'tennessee', 'tennis', 'texas', 'thirteen', 'three', 'timing', 'triple',
+		'twelve', 'twenty', 'two', 'uncle', 'undone', 'uniform', 'uranus', 'utah',
+		'vegan', 'venus', 'vermont', 'victor', 'video', 'violet', 'virginia',
+		'washington', 'west', 'whiskey', 'white', 'william', 'windmill', 'winter',
+		'wisconsin', 'wolfram', 'wyoming', 'xray', 'yankee', 'yellow', 'zebra',
+		'zulu'
+	]
+
+	wordMap = {
+		'abacus': 0x00, 'alabama': 0x01, 'alarmist': 0x02, 'alaska': 0x03,
+		'alpha': 0x04, 'angel': 0x05, 'apart': 0x06, 'april': 0x07,
+		'arizona': 0x08, 'arkansas': 0x09, 'artist': 0x0A, 'asparagus': 0x0B,
+		'aspen': 0x0C, 'august': 0x0D, 'autumn': 0x0E, 'avocado': 0x0F,
+		'bacon': 0x10, 'bakerloo': 0x11, 'batman': 0x12, 'beer': 0x13,
+		'berlin': 0x14, 'beryllium': 0x15, 'black': 0x16, 'blimp': 0x17,
+		'blossom': 0x18, 'bluebird': 0x19, 'bravo': 0x1A, 'bulldog': 0x1B,
+		'burger': 0x1C, 'butter': 0x1D, 'california': 0x1E, 'carbon': 0x1F,
+		'cardinal': 0x20, 'carolina': 0x21, 'carpet': 0x22, 'cat': 0x23,
+		'ceiling': 0x24, 'charlie': 0x25, 'chicken': 0x26, 'coffee': 0x27,
+		'cola': 0x28, 'cold': 0x29, 'colorado': 0x2A, 'comet': 0x2B,
+		'connecticut': 0x2C, 'crazy': 0x2D, 'cup': 0x2E, 'dakota': 0x2F,
+		'december': 0x30, 'delaware': 0x31, 'delta': 0x32, 'diet': 0x33,
+		'don': 0x34, 'double': 0x35, 'early': 0x36, 'earth': 0x37, 'east': 0x38,
+		'echo': 0x39, 'edward': 0x3A, 'eight': 0x3B, 'eighteen': 0x3C,
+		'eleven': 0x3D, 'emma': 0x3E, 'enemy': 0x3F, 'equal': 0x40, 'failed': 0x41,
+		'fantail': 0x42, 'fifteen': 0x43, 'fillet': 0x44, 'finland': 0x45,
+		'fish': 0x46, 'five': 0x47, 'fix': 0x48, 'floor': 0x49, 'florida': 0x4A,
+		'football': 0x4B, 'four': 0x4C, 'fourteen': 0x4D, 'foxtrot': 0x4E,
+		'freddie': 0x4F, 'friend': 0x50, 'fruit': 0x51, 'gee': 0x52,
+		'georgia': 0x53, 'glucose': 0x54, 'golf': 0x55, 'green': 0x56,
+		'great': 0x57, 'hamper': 0x58, 'happy': 0x59, 'harry': 0x5A, 'hawaii': 0x5B,
+		'helium': 0x5C, 'high': 0x5D, 'hot': 0x5E, 'hotel': 0x5F, 'hydrogen': 0x60,
+		'idaho': 0x61, 'illinois': 0x62, 'india': 0x63, 'indigo': 0x64,
+		'ink': 0x65, 'iowa': 0x66, 'island': 0x67, 'item': 0x68, 'jersey': 0x69,
+		'jig': 0x6A, 'jogger': 0x6B, 'juliet': 0x6C, 'july': 0x6D, 'jupiter': 0x6E,
+		'kansas': 0x6F, 'kentucky': 0x70, 'kilo': 0x71, 'king': 0x72,
+		'kitten': 0x73, 'lactose': 0x74, 'lake': 0x75, 'lamp': 0x76, 'lemon': 0x77,
+		'leopard': 0x78, 'lima': 0x79, 'lion': 0x7A, 'lithium': 0x7B,
+		'london': 0x7C, 'louisiana': 0x7D, 'low': 0x7E, 'magazine': 0x7F,
+		'magnesium': 0x80, 'maine': 0x81, 'mango': 0x82, 'march': 0x83,
+		'mars': 0x84, 'maryland': 0x85, 'massachusetts': 0x86, 'may': 0x87,
+		'mexico': 0x88, 'michigan': 0x89, 'mike': 0x8A, 'minnesota': 0x8B,
+		'mirror': 0x8C, 'mississippi': 0x8D, 'missouri': 0x8E, 'mobile': 0x8F,
+		'mockingbird': 0x90, 'monkey': 0x91, 'montana': 0x92, 'moon': 0x93,
+		'mountain': 0x94, 'multiply': 0x95, 'music': 0x96, 'nebraska': 0x97,
+		'neptune': 0x98, 'network': 0x99, 'nevada': 0x9A, 'nine': 0x9B,
+		'nineteen': 0x9C, 'nitrogen': 0x9D, 'north': 0x9E, 'november': 0x9F,
+		'nuts': 0xA0, 'october': 0xA1, 'ohio': 0xA2, 'oklahoma': 0xA3, 'one': 0xA4,
+		'orange': 0xA5, 'oranges': 0xA6, 'oregon': 0xA7, 'oscar': 0xA8,
+		'oven': 0xA9, 'oxygen': 0xAA, 'paper': 0xAB, 'paris': 0xAC, 'pasta': 0xAD,
+		'pennsylvania': 0xAE, 'pip': 0xAF, 'pizza': 0xB0, 'pluto': 0xB1,
+		'potato': 0xB2, 'princess': 0xB3, 'purple': 0xB4, 'quebec': 0xB5,
+		'queen': 0xB6, 'quiet': 0xB7, 'red': 0xB8, 'river': 0xB9, 'robert': 0xBA,
+		'robin': 0xBB, 'romeo': 0xBC, 'rugby': 0xBD, 'sad': 0xBE, 'salami': 0xBF,
+		'saturn': 0xC0, 'september': 0xC1, 'seven': 0xC2, 'seventeen': 0xC3,
+		'shade': 0xC4, 'sierra': 0xC5, 'single': 0xC6, 'sink': 0xC7, 'six': 0xC8,
+		'sixteen': 0xC9, 'skylark': 0xCA, 'snake': 0xCB, 'social': 0xCC,
+		'sodium': 0xCD, 'solar': 0xCE, 'south': 0xCF, 'spaghetti': 0xD0,
+		'speaker': 0xD1, 'spring': 0xD2, 'stairway': 0xD3, 'steak': 0xD4,
+		'stream': 0xD5, 'summer': 0xD6, 'sweet': 0xD7, 'table': 0xD8,
+		'tango': 0xD9, 'ten': 0xDA, 'tennessee': 0xDB, 'tennis': 0xDC,
+		'texas': 0xDD, 'thirteen': 0xDE, 'three': 0xDF, 'timing': 0xE0,
+		'triple': 0xE1, 'twelve': 0xE2, 'twenty': 0xE3, 'two': 0xE4, 'uncle': 0xE5,
+		'undone': 0xE6, 'uniform': 0xE7, 'uranus': 0xE8, 'utah': 0xE9,
+		'vegan': 0xEA, 'venus': 0xEB, 'vermont': 0xEC, 'victor': 0xED,
+		'video': 0xEE, 'violet': 0xEF, 'virginia': 0xF0, 'washington': 0xF1,
+		'west': 0xF2, 'whiskey': 0xF3, 'white': 0xF4, 'william': 0xF5,
+		'windmill': 0xF6, 'winter': 0xF7, 'wisconsin': 0xF8, 'wolfram': 0xF9,
+		'wyoming': 0xFA, 'xray': 0xFB, 'yankee': 0xFC, 'yellow': 0xFD,
+		'zebra': 0xFE, 'zulu': 0xFF
+	}
+	
+	@classmethod
+	def setWordList(clz, wordList):
+		if len(wordList) != 256:
+			raise Exception()
+		
+		clz.wordList = list(wordList)
+		clz.wordMap = {word: count for count, word in enumerate(wordList)}
+	
+	@classmethod
+	def decode(clz, string):
+		string = clz._canonicalRepr(string)
+		wordlist = re.findall(r'\w+', string)
+		
+		result = ''
+		
+		for word in wordlist:
+			if word not in clz.wordMap:
+				raise ValueError('Illegal input string')
+			
+			result += chr(clz.wordMap[word])
+		
+		return result
+	
+	@classmethod
+	def encode(clz, byteString):
+		result = []
+		
+		for ch in byteString:
+			result.append(clz.wordList[ord(ch)])
+		
+		return ' '.join(result)
+	
+	@classmethod
+	def _canonicalRepr(clz, string):
+		return re.sub(r'[\W_]', ' ', string).lower()
+
+
+
 if __name__ == '__main__':
 	import doctest
 	
-	doctest.testmod(optionflags=doctest.ELLIPSIS)
-	doctest.testfile('README.md', optionflags=doctest.ELLIPSIS, globs=globals())
-	doctest.testfile('documentation/custom_encoding.md', optionflags=doctest.ELLIPSIS, globs=globals())
-	doctest.testfile('tests/tests.md', optionflags=doctest.ELLIPSIS, globs=globals())
+	options = doctest.ELLIPSIS | doctest.NORMALIZE_WHITESPACE
+	
+	doctest.testmod(optionflags=options)
+	doctest.testfile('README.md', optionflags=options, globs=globals())
+	doctest.testfile('documentation/custom_encoding.md', optionflags=options, globs=globals())
+	doctest.testfile('tests/tests.md', optionflags=options, globs=globals())

@@ -245,9 +245,7 @@ instance's `stringWithEncoding` method, passing it the `Squash` class.
 	gGGBIGFpb4dhb3NhaWxuUmNlcihsc3JTIGllgiBhb2F1IG9lb2NhZSBwbmh0b2EK
 	IGF1c4AggGF0cg==
 
-<!-- For some reason the test above fails. The failure shows the expected
-     and the actual values to be identical, so I believe it's a bug in the
-     test framework. -->
+<!-- The test above fails without the NORMALIZE_WHITESPACE flag -->
 
 Now, we would expect that the compressed string would be smaller than the
 original raw string, but remember that the result is Base64 encoded, and
