@@ -366,6 +366,7 @@ class Phonetic(Encoding):
 	>>> hex(a)
 	''
 	
+	
 	A zero value byte string encodes to a Phonetic-encoded string as many words
 	as the byte width of the original string.
 	
@@ -373,12 +374,14 @@ class Phonetic(Encoding):
 	>>> b.stringWithEncoding(Phonetic)
 	'abacus abacus abacus abacus'
 	
+	
 	Decoding a Phonetic-encoded string accepts canonical strings (lower case
 	words separated by spaces).
 	
 	>>> c = Data('chicken yankee wolfram asparagus', Phonetic)
 	>>> hex(c)
 	'26FCF90B'
+	
 	
 	Decoding a Phonetic-encoded string accepts reasonable deviations from the
 	canonical string (mixed case, alternative whitespace, hyphens, periods,
@@ -388,10 +391,12 @@ class Phonetic(Encoding):
 	>>> hex(d)
 	'D8DC272EE3DF'
 	
+	
 	Re-encoding the data results in the canonicalized word string.
 	
 	>>> d.stringWithEncoding(Phonetic)
 	'table tennis coffee cup twenty three'
+	
 	
 	Words that are not in the word list are invalid.
 	
@@ -404,20 +409,6 @@ class Phonetic(Encoding):
 	Traceback (most recent call last):
 	   ...
 	ValueError: Illegal input string
-	
-	
-	SANITY TEST
-	
-	This is a doctest to verify that a byte string converted to a Phonetic-
-	encoded string will decode into the original byte string.
-	
-	>>> byteString = ''.join(chr(i) for i in range(256))
-	>>> e = Data(byteString)
-	>>> string = e.stringWithEncoding(Phonetic)
-	>>> f = Data(string, Phonetic)
-	>>> f.bytes == byteString
-	True
-	
 	'''
 	
 	wordList = [

@@ -145,3 +145,71 @@ decided to make it a test.
 	
 	>>> Data('ctgatccc aagctgtg gatcttcc cagggcgg tgttgaga', BasePair)
 	Data('bJUNu8mlT9+6zA==', Base64)
+
+
+### Phonetic Encoding
+
+This is a doctest to verify that a byte string converted to a Phonetic-
+encoded string will decode into the original byte string.
+
+	>>> byteString = ''.join(chr(i) for i in range(256))
+	>>> e = Data(byteString)
+	>>> string = e.stringWithEncoding(Phonetic)
+	>>> f = Data(string, Phonetic)
+	>>> f.bytes == byteString
+	True
+
+Custom wordlists can be used.
+
+	>>> class ExchangeNames(Phonetic):
+	...     pass
+	... 
+	>>> ExchangeNames.setWordList([
+	... 'academy', 'adams', 'alpine', 'amherst', 'andrew', 'atlantic', 'atlas',
+	... 'atwater', 'atwood', 'avenue', 'axminster', 'axtel', 'baldwin', 'belmont',
+	... 'beverly', 'bridge', 'broadway', 'butler', 'capital', 'castle', 'cedar',
+	... 'central', 'chapel', 'cherry', 'chestnut', 'churchill', 'circle',
+	... 'clearbrook', 'clifford', 'clinton', 'congress', 'crestwood', 'cypress',
+	... 'davenport', 'davis', 'deerfield', 'dewey', 'diamond', 'dickens', 'drake',
+	... 'drexel', 'dudley', 'dunkirk', 'dupont', 'eastgate', 'edgewood', 'edison',
+	... 'elliot', 'elmwood', 'emerson', 'empire', 'endicott', 'essex', 'evergreen',
+	... 'exeter', 'fairfax', 'federal', 'fieldbrook', 'fieldstone', 'fillmore',
+	... 'flanders', 'fleetwood', 'forest', 'foxcroft', 'franklin', 'frontier',
+	... 'fulton', 'garden', 'garfield', 'general', 'geneva', 'gibson', 'gilbert',
+	... 'gladstone', 'glendale', 'globe', 'goldenrod', 'granite', 'greenbriar',
+	... 'greenfield', 'gridley', 'grover', 'hamilton', 'harrison', 'hazel', 'hemlock',
+	... 'hempstead', 'hickory', 'hillcrest', 'hillside', 'hobart', 'homestead',
+	... 'hopkins', 'howard', 'hudson', 'hunter', 'huxley', 'hyacinth', 'hyatt',
+	... 'idlewood', 'jackson', 'jefferson', 'jordan', 'juniper', 'juno', 'kellogg',
+	... 'keystone', 'kimball', 'kingsdale', 'lafayette', 'lakeside', 'lambert',
+	... 'lawrence', 'lehigh', 'lenox', 'liberty', 'lincoln', 'linden', 'locust',
+	... 'logan', 'longacre', 'lowell', 'ludlow', 'luther', 'lyndhurst', 'madison',
+	... 'main', 'market', 'mayfair', 'medford', 'melrose', 'mercury', 'midway',
+	... 'milton', 'mission', 'mitchell', 'mohawk', 'montrose', 'morris', 'murdock',
+	... 'murray', 'museum', 'mutual', 'myrtle', 'national', 'neptune', 'newton',
+	... 'niagara', 'normandy', 'northfield', 'oldfield', 'oliver', 'olympia',
+	... 'orange', 'orchard', 'oriole', 'orleans', 'osborne', 'overbrook', 'owen',
+	... 'oxbridge', 'oxford', 'palace', 'parkway', 'pennsylvania', 'pershing',
+	... 'pilgrim', 'pioneer', 'plateau', 'plaza', 'pleasant', 'plymouth', 'poplar',
+	... 'porter', 'prescott', 'president', 'prospect', 'pyramid', 'randolph',
+	... 'raymond', 'redwood', 'regent', 'republic', 'riverside', 'rockwell', 'rogers',
+	... 'saratoga', 'shadyside', 'sherwood', 'skyline', 'southfield', 'spring',
+	... 'spruce', 'state', 'sterling', 'stillwell', 'story', 'sunset', 'swathmore',
+	... 'swift', 'swinburne', 'sycamore', 'talbot', 'taylor', 'temple', 'tennyson',
+	... 'terminal', 'terrace', 'thornwell', 'tilden', 'townsend', 'tremont',
+	... 'triangle', 'trinity', 'trojan', 'tucker', 'tulip', 'turner', 'tuxedo',
+	... 'twilight', 'twinbrook', 'twinoaks', 'ulrick', 'ulster', 'ulysses',
+	... 'underhill', 'union', 'university', 'uptown', 'valley', 'vandyke', 'vernon',
+	... 'victoria', 'viking', 'vinewood', 'volunteer', 'wabash', 'walker', 'walnut',
+	... 'warwick', 'waverly', 'webster', 'wellington', 'wells', 'westmore',
+	... 'whitehall', 'whitney', 'william', 'wilson', 'windsor', 'woodland', 'worth',
+	... 'yardley', 'yellowstone', 'yorktown', 'yukon'
+	... ])
+	>>> d = Data('grumpy wizards')
+	>>> s = d.stringWithEncoding(ExchangeNames)
+	>>> s
+	'juniper lenox linden lafayette lawrence lowell cypress logan
+	kellogg ludlow hyacinth lenox jackson liberty'
+	>>> e = Data(s, ExchangeNames)
+	>>> e.bytes == 'grumpy wizards'
+	True
