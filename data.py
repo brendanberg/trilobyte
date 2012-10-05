@@ -15,7 +15,7 @@
 # Copyright Plus or Minus Five, 2012
 
 from __future__ import division
-from math import log
+from math import log, ceil
 import re
 
 
@@ -30,8 +30,17 @@ class Data(object):
 		if encoding:
 			self.bytes = encoding.decode(string)
 		else:
-			assert(isinstance(string, str))
-			self.bytes = string
+			# assert(isinstance(string, str) or isinstance(string, int) or isinstance()
+			if isinstance(string, str):
+				self.bytes = string
+			elif isinstance(string, int) or isinstance(string, long):
+				num = string
+				if num < 0:
+					raise ValueError('Data constructor requires a positive integer')
+				byteLen = int(ceil(num.bit_length() / 8))
+				self.bytes = ''.join(chr(num >> (8 * i) & 0xFF) for i in reversed(range(byteLen)))
+			else:
+				raise TypeError('Data constructor requires a byte string, int, or long')
 	
 	def stringWithEncoding(self, encoding, **kwargs):
 		return encoding.encode(self.bytes, **kwargs)
@@ -443,7 +452,7 @@ class Phonetic(Encoding):
 		'social', 'sodium', 'solar', 'south', 'spaghetti', 'speaker', 'spring',
 		'stairway', 'steak', 'stream', 'summer', 'sweet', 'table', 'tango', 'ten',
 		'tennessee', 'tennis', 'texas', 'thirteen', 'three', 'timing', 'triple',
-		'twelve', 'twenty', 'two', 'uncle', 'undone', 'uniform', 'uranus', 'utah',
+		'twelve', 'twenty', 'two', 'uncle', 'undone', 'uniform', 'uranium', 'utah',
 		'vegan', 'venus', 'vermont', 'victor', 'video', 'violet', 'virginia',
 		'washington', 'west', 'whiskey', 'white', 'william', 'windmill', 'winter',
 		'wisconsin', 'wolfram', 'wyoming', 'xray', 'yankee', 'yellow', 'zebra',
@@ -505,7 +514,7 @@ class Phonetic(Encoding):
 		'tango': 0xD9, 'ten': 0xDA, 'tennessee': 0xDB, 'tennis': 0xDC,
 		'texas': 0xDD, 'thirteen': 0xDE, 'three': 0xDF, 'timing': 0xE0,
 		'triple': 0xE1, 'twelve': 0xE2, 'twenty': 0xE3, 'two': 0xE4, 'uncle': 0xE5,
-		'undone': 0xE6, 'uniform': 0xE7, 'uranus': 0xE8, 'utah': 0xE9,
+		'undone': 0xE6, 'uniform': 0xE7, 'uranium': 0xE8, 'utah': 0xE9,
 		'vegan': 0xEA, 'venus': 0xEB, 'vermont': 0xEC, 'victor': 0xED,
 		'video': 0xEE, 'violet': 0xEF, 'virginia': 0xF0, 'washington': 0xF1,
 		'west': 0xF2, 'whiskey': 0xF3, 'white': 0xF4, 'william': 0xF5,
